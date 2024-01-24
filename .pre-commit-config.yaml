@@ -1,0 +1,36 @@
+repos:
+  - repo: local
+    hooks:
+      - id: commitizen
+        name: commitizen
+        entry: black src
+        language: system
+        types: [ python ]
+        require_serial: true
+        fail_fast: true
+
+      - id: black
+        name: black
+        entry: black src
+        language: system
+        types: [ python ]
+        require_serial: true
+        fail_fast: true
+      
+      - id: ruff
+        name: ruff
+        entry: ruff check --fix src
+        language: system
+        types: [ python ]
+        require_serial: true
+        fail_fast: true
+      
+      - id: pyupgrade
+        name: pyupgrade
+        entry: pyupgrade --py311-plus
+        language: system
+        types: [ python ]
+        require_serial: true
+        fail_fast: true
+
+  
