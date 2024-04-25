@@ -1,5 +1,2 @@
-black
 ruff
-commitizen
-pyupgrade
 pre-commit

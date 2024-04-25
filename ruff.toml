@@ -1,0 +1,71 @@
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".git-rewrite",
+    ".hg",
+    ".ipynb_checkpoints",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pyenv",
+    ".pytest_cache",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "site-packages",
+    "venv",
+    "docs",
+    "tests/conftest.py",
+    "__pycache__",
+]
+
+line-length = 110
+indent-width = 4
+
+# Assume Python 3.11
+target-version = "py311"
+
+[lint]
+ignore = [
+    "E731", # Allow assigning lambdas to variables. Link: https://docs.astral.sh/ruff/rules/lambda-assignment/
+    "B006", # Allow mutable structures for argument defaults. Link https://docs.astral.sh/ruff/rules/mutable-argument-default/
+    "C901", # The code in a function is too complex. The team should refactor the code. If there are no resources available for refactoring, ignore on a case by case basis  Link: https://docs.astral.sh/ruff/rules/complex-structure/
+]
+select = ["B", "C", "E", "F", "I", "UP", "SIM", "W"]
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+
+[format]
+# Like Black, use double quotes for strings.
+quote-style = "double"
+
+# Like Black, indent with spaces, rather than tabs.
+indent-style = "space"
+
+# Like Black, respect magic trailing commas.
+skip-magic-trailing-comma = false
+
+# Like Black, automatically detect the appropriate line ending.
+line-ending = "auto"
+
+[lint.per-file-ignores]
+# Ignore `E402` (Module level import not at top of file)
+"__init__.py" = ["E402"]
+
+
+[lint.isort]
+known-third-party = ["alembic"]

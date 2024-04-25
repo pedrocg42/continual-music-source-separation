@@ -1,5 +1,5 @@
-from madre.base.data.data_transforms.data_transform import DataTransform
 import numpy as np
+from madre.base.data.data_transforms.data_transform import DataTransform
 
 
 class StereoToBatch(DataTransform):

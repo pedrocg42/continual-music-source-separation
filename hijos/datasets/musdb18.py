@@ -1,10 +1,11 @@
 import os
+
 import musdb
-from musdb.audio_classes import MultiTrack
 import numpy as np
-from torch import Tensor
-from madre.base.data.dataset.dataset import Dataset
 from madre.base.container.register import register
+from madre.base.data.dataset.dataset import Dataset
+from musdb.audio_classes import MultiTrack
+from torch import Tensor
 
 STEMS = ["mixture", "drums", "bass", "accompaniment", "vocals"]
 
@@ -17,7 +18,7 @@ class MUSDB18(Dataset):
         targets: list[str] | None = None,
         split: str | None = None,
         is_wav: bool = False,
-        **kwargs
+        **kwargs,
     ) -> None:
         super().__init__(name=name, **kwargs)
 
@@ -53,10 +54,6 @@ class MUSDB18(Dataset):
         track: MultiTrack = self.mus[self.position]
         mixture = track.audio
 
-        from scipy.io.wavfile import write
-
-        write("test.wav", track.rate, track.audio)
-
         if self.targets is None:
             # returning all of them
             target_audios = track.stems[1:]
@@ -66,14 +63,12 @@ class MUSDB18(Dataset):
                 if target_audios is None:
                     target_audios = track.targets[target].audio[np.newaxis]
                 else:
-                    target_audios = np.vstack(
-                        [target_audios, track.targets[target].audio[np.newaxis]]
-                    )
+                    target_audios = np.vstack([target_audios, track.targets[target].audio[np.newaxis]])
 
         return mixture, target_audios
 
 
 @register()
 class MUSDB18HQ(MUSDB18):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(name="musdb18hq", is_wav=True, *args, **kwargs)
+    def __init__(self, **kwargs) -> None:
+        super().__init__(name="musdb18hq", is_wav=True, **kwargs)
