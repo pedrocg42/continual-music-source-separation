@@ -1,0 +1,109 @@
+experiment_name: bs-roformer_all
+experiment_description: BS Roformer main experiment with all stems.
+experiment_topic: Music-Source-Separation
+experiment_tracker:
+  name: MLFlowExperimentTracker
+log_level: INFO
+plugins:
+  - hijos
+output_folder: output
+
+train:
+  epochs: 5
+  data:
+    train:
+      datasets:
+        - name: MUSDB18HQ
+          args:
+            targets: all
+            split: train
+      dataloader:
+        name: TorchDataLoader
+        num_workers: 4
+        batch_size: 16
+        decoder:
+          name: DataDecoder
+        data_transforms:
+          - name: RandomAudioChunk
+            args:
+              chunk_length: 352800
+          - name: StereoToBatch
+          - name: ToTorchTensor
+    eval:
+      datasets:
+        - name: MUSDB18HQ
+          targets: all
+          split: validation
+      dataloader:
+        name: TorchDataLoader
+        num_workers: 4
+        batch_size: 16
+        decoder:
+          name: DataDecoder
+        data_transforms:
+          - name: RandomAudioChunk
+            args:
+              chunk_length: 352800
+          - name: StereoToBatch
+          - name: ToTorchTensor
+  model:
+    name: BSRoformer
+    args:
+      dim: 512
+      depth: 3
+      time_transformer_depth: 1
+      freq_transformer_depth: 1
+      num_stems: 4
+      stereo: True
+      stft_n_fft: 2048
+      multi_stft_resolutions_window_sizes: [4096, 2048, 1024, 512, 256]
+      multi_stft_window_fn: hann
+  criteria:
+    name: BsRoformerCriteria
+    args:
+      num_stems: 4
+      stereo: True
+      stft_n_fft: 2048
+      multi_stft_resolutions_window_sizes: [4096, 2048, 1024, 512, 256]
+      multi_stft_window_fn: hann
+  optimizer:
+    name: TorchSgdOptimizer
+    args:
+      lr: 0.0005
+      momentum: 0.9
+      weight_decay: 2.0e-05
+  looper:
+    name: TorchClassificationLooper
+  metrics:
+    - name: MusicSourceSeparationMetric
+  evaluator:
+    name: MusicSourceSeparationEvaluator
+  saver:
+    name: TorchModelSaver
+evaluation:
+  datasets:
+    - name: MUSDB18HQ
+      targets: all
+      split: validation
+  dataloader:
+    name: TorchDataLoader
+    num_workers: 4
+    batch_size: 16
+    decoder:
+      name: DataDecoder
+    data_transforms:
+      - name: RandomAudioChunk
+        args:
+          chunk_length: 352800
+      - name: StereoToBatch
+      - name: ToTorchTensor
+  algorithm:
+    name: Algorithm
+    processor:
+      name: TorchModelProcessor
+  evaluator:
+    name: MusicSourceEvaluator
+  metrics_executor:
+    name: DefaultMetricExecutor
+    metrics:
+      - name: MusicSourceMetric

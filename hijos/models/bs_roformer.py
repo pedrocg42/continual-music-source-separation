@@ -1,8 +1,10 @@
 import torch
 from bs_roformer import BSRoformer
+from madre import register
 from madre.models.torch_base_model import TorchBaseModel
 
 
+@register()
 class TorchBSRoformer(TorchBaseModel):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

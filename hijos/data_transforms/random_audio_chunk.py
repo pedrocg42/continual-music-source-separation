@@ -1,7 +1,9 @@
 import numpy as np
+from madre import register
 from madre.base.data.data_transforms.data_transform import DataTransform
 
 
+@register()
 class RandomAudioChunk(DataTransform):
     def __init__(self, chunk_length: int = 352800, stereo: bool = True) -> None:
         super().__init__()

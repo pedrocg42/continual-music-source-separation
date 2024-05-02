@@ -1,0 +1,62 @@
+[build-system]
+build-backend = "hatchling.build"
+requires = ["hatchling"]
+
+[project]
+name = "hijos"
+description = "Hijos are plugins of madre"
+readme = "README.md"
+keywords = ["Types"]
+license = "MIT"
+authors = [{ name = "Alice Biometrics", email = "support@alicebiometrics.com" }]
+requires-python = '>=3.12'
+classifiers = [
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Software Development",
+  "Typing :: Typed",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dynamic = ["version"]
+dependencies = ["musdb", "torch", "torchaudio", "bs_roformer"]
+[project.optional-dependencies]
+dev = [
+  "pre-commit",
+  "ruff",
+  "mypy",
+  "pytest",
+  "pytest-cov",
+  "pytest-mock",
+  "pytest-env",
+  "pytest-clarity",
+  "pip-audit",
+]
+[project.scripts]
+madre-experiment = "madre.cli.madre_experiment:main"
+
+[tool.hatch.version]
+path = "hijos/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+include = ["madre", "madre_cli"]
+
+
+[tool.pytest.ini_options]
+markers = ["unit", "property"]
+addopts = ["tests", "-v", "--color=yes", "--durations=10"]
+filterwarnings = ["error", "ignore::DeprecationWarning"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*", "should_*"]
+norecursedirs = [
+  "output",
+  ".mypy_cache",
+  ".github",
+  "madre",
+  "samples",
+  "*.egg-info",
+  "dist",
+  ".git",
+]

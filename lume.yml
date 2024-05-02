@@ -2,26 +2,16 @@ name: chum
 
 install:
   run:
-    - pip install -U -r requirements/requirements-dev.txt -r requirements/requirements.txt
+    - uv pip install -U -r requirements/requirements-dev.txt -r requirements/requirements.txt
     - pre-commit install
 
 uninstall:
   run:
-    - pip uninstall freeze | xargs pip uninstall -y
-    - pip install lume
+    - uv pip uninstall freeze | xargs pip uninstall -y
+    - uv pip install lume
 
 steps:
-  setup:
-    output: deps
-    deps:
-      face_recognition:
-        type: file
-        url: https://github.com/onnx/models/raw/main/vision/body_analysis/arcface/model/arcfaceresnet100-8.onnx
-        unzip: false
   lint:
     run:
-      - black src
-      - ruff src
-      - pyupgrade --py311-plus `find src -name "*.py" -type f`
-  
-
+      - ruff check --fix hijos
+      - ruff format hijos

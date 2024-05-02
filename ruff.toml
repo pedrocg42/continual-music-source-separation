@@ -34,14 +34,14 @@ exclude = [
 line-length = 110
 indent-width = 4
 
-# Assume Python 3.11
-target-version = "py311"
+# Assume Python 3.12
+target-version = "py312"
 
 [lint]
 ignore = [
     "E731", # Allow assigning lambdas to variables. Link: https://docs.astral.sh/ruff/rules/lambda-assignment/
     "B006", # Allow mutable structures for argument defaults. Link https://docs.astral.sh/ruff/rules/mutable-argument-default/
-    "C901", # The code in a function is too complex. The team should refactor the code. If there are no resources available for refactoring, ignore on a case by case basis  Link: https://docs.astral.sh/ruff/rules/complex-structure/
+    # "C901", # The code in a function is too complex. The team should refactor the code. If there are no resources available for refactoring, ignore on a case by case basis  Link: https://docs.astral.sh/ruff/rules/complex-structure/
 ]
 select = ["B", "C", "E", "F", "I", "UP", "SIM", "W"]
 
