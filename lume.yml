@@ -2,7 +2,7 @@ name: chum
 
 install:
   run:
-    - uv pip install -U -r requirements/requirements-dev.txt -r requirements/requirements.txt
+    - uv pip install -U .[dev]
     - pre-commit install
 
 uninstall:

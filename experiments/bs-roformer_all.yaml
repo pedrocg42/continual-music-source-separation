@@ -14,7 +14,7 @@ train:
     train:
       datasets:
         - name: MUSDB18HQ
-          args:
+          kwargs:
             targets: all
             split: train
       dataloader:
@@ -25,7 +25,7 @@ train:
           name: DataDecoder
         data_transforms:
           - name: RandomAudioChunk
-            args:
+            kwargs:
               chunk_length: 352800
           - name: StereoToBatch
           - name: ToTorchTensor
@@ -42,13 +42,13 @@ train:
           name: DataDecoder
         data_transforms:
           - name: RandomAudioChunk
-            args:
+            kwargs:
               chunk_length: 352800
           - name: StereoToBatch
           - name: ToTorchTensor
   model:
-    name: BSRoformer
-    args:
+    name: TorchBSRoformer
+    kwargs:
       dim: 512
       depth: 3
       time_transformer_depth: 1
@@ -56,28 +56,29 @@ train:
       num_stems: 4
       stereo: True
       stft_n_fft: 2048
-      multi_stft_resolutions_window_sizes: [4096, 2048, 1024, 512, 256]
-      multi_stft_window_fn: hann
+      window_sizes: [4096, 2048, 1024, 512, 256]
+      window_fn: hann
   criteria:
-    name: BsRoformerCriteria
-    args:
+    name: TorchBsRoformerCriteria
+    kwargs:
       num_stems: 4
-      stereo: True
+      resolution_weight: 1.0
       stft_n_fft: 2048
-      multi_stft_resolutions_window_sizes: [4096, 2048, 1024, 512, 256]
-      multi_stft_window_fn: hann
+      window_sizes: [4096, 2048, 1024, 512, 256]
+      window_fn: hann
   optimizer:
     name: TorchSgdOptimizer
-    args:
+    kwargs:
       lr: 0.0005
       momentum: 0.9
       weight_decay: 2.0e-05
   looper:
-    name: TorchClassificationLooper
-  metrics:
-    - name: MusicSourceSeparationMetric
+    name: TorchLooper
   evaluator:
     name: MusicSourceSeparationEvaluator
+  metrics:
+    - name: MusicSourceSeparationMetric
+
   saver:
     name: TorchModelSaver
 evaluation:
@@ -93,7 +94,7 @@ evaluation:
       name: DataDecoder
     data_transforms:
       - name: RandomAudioChunk
-        args:
+        kwargs:
           chunk_length: 352800
       - name: StereoToBatch
       - name: ToTorchTensor

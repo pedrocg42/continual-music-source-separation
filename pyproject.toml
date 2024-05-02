@@ -20,7 +20,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
 ]
 dynamic = ["version"]
-dependencies = ["musdb", "torch", "torchaudio", "bs_roformer"]
+dependencies = ["musdb", "torch", "torchaudio", "bs_roformer", "mir_eval"]
 [project.optional-dependencies]
 dev = [
   "pre-commit",
