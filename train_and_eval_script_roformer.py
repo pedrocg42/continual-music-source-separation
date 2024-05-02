@@ -1,10 +1,12 @@
+import os
+
 import torch
 from bs_roformer import BSRoformer
 from madre.base.data.data_decoder import DataDecoder
-from madre.extra.torch.torch_data_loader import TorchDataLoader
+from madre.extra.torch.data.torch_data_loader import TorchDataLoader
 
 import config
-from hijos.criterias.bs_roformer_criteria import BsRoformerCriteria
+from hijos.criterias.torch_bs_roformer_criteria import TorchBsRoformerCriteria
 from hijos.data_transforms.random_audio_chunk import RandomAudioChunk
 from hijos.data_transforms.stereo_to_batch import StereoToBatch
 from hijos.data_transforms.to_torch_tensor import ToTorchTensor
@@ -18,9 +20,9 @@ num_stems = len(targets)
 multi_stft_resolution_loss_weight = 1.0
 multi_stft_resolutions_window_sizes = (4096, 2048, 1024, 512, 256)
 stft_n_fft = 2048
-window_fn = torch.hann_window
+window_fn = "hann"
 
-criteria = BsRoformerCriteria(
+criteria = TorchBsRoformerCriteria(
     num_stems=num_stems,
     resolution_weight=multi_stft_resolution_loss_weight,
     window_sizes=multi_stft_resolutions_window_sizes,
@@ -43,7 +45,7 @@ model = BSRoformer(
 model.to(config.device)
 
 dataset_train = MUSDB18HQ(
-    base_path=config.datasets_path,
+    base_path=os.getenv("DATASETS_PATH", "."),
     targets=["vocals", "drums", "bass", "other"],
     split="train",
 )

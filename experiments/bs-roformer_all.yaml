@@ -22,7 +22,7 @@ train:
         num_workers: 4
         batch_size: 16
         decoder:
-          name: DataDecoder
+          name: Decoder
         data_transforms:
           - name: RandomAudioChunk
             kwargs:
@@ -39,7 +39,7 @@ train:
         num_workers: 4
         batch_size: 16
         decoder:
-          name: DataDecoder
+          name: Decoder
         data_transforms:
           - name: RandomAudioChunk
             kwargs:
@@ -78,7 +78,6 @@ train:
     name: MusicSourceSeparationEvaluator
   metrics:
     - name: MusicSourceSeparationMetric
-
   saver:
     name: TorchModelSaver
 evaluation:
@@ -91,7 +90,7 @@ evaluation:
     num_workers: 4
     batch_size: 16
     decoder:
-      name: DataDecoder
+      name: Decoder
     data_transforms:
       - name: RandomAudioChunk
         kwargs:

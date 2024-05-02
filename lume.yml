@@ -1,8 +1,8 @@
-name: chum
+name: hijos
 
 install:
   run:
-    - uv pip install -U .[dev]
+    - uv pip install -e .[dev]
     - pre-commit install
 
 uninstall:

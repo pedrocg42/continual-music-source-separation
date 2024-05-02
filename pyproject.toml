@@ -4,12 +4,12 @@ requires = ["hatchling"]
 
 [project]
 name = "hijos"
-description = "Hijos are plugins of madre"
+description = "Hijos are the specialized babies of madre"
 readme = "README.md"
 keywords = ["Types"]
 license = "MIT"
 authors = [{ name = "Alice Biometrics", email = "support@alicebiometrics.com" }]
-requires-python = '>=3.12'
+requires-python = '>=3.11'
 classifiers = [
   "Operating System :: OS Independent",
   "License :: OSI Approved :: MIT License",

@@ -4,10 +4,9 @@ import torch
 import torch.nn.functional as F
 from einops import rearrange
 from madre import register
+from madre.extra.torch import DEVICE
 from madre.extra.torch.train.criterias.torch_criteria import TorchCriteria
 from torch import Tensor, stft
-
-import config
 
 
 @register()
@@ -51,7 +50,7 @@ class TorchBsRoformerCriteria(TorchCriteria):
                 ),  # not sure what n_fft is across multi resolution stft
                 "win_length": window_size,
                 "return_complex": True,
-                "window": self.window_fn(window_size, device=config.device),
+                "window": self.window_fn(window_size, device=DEVICE),
                 "hop_length": 147,
                 "normalized": False,
             }

@@ -15,12 +15,13 @@ class MUSDB18(Dataset):
     def __init__(
         self,
         name: str = "musdb18",
+        base_path: str = os.getenv("DATASETS_PATH", "."),
         targets: list[str] | None = None,
         split: str | None = None,
         is_wav: bool = False,
         **kwargs,
     ) -> None:
-        super().__init__(name=name, **kwargs)
+        super().__init__(name=name, base_path=base_path, **kwargs)
 
         self.targets = targets
         self.split = split
