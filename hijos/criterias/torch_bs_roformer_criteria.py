@@ -1,29 +1,36 @@
-from collections.abc import Callable
+from typing import Literal
 
+import torch
 import torch.nn.functional as F
 from einops import rearrange
-from madre.extra.torch.train.torch_criteria import TorchCriteria
+from madre import register
+from madre.extra.torch.train.criterias.torch_criteria import TorchCriteria
 from torch import Tensor, stft
 
 import config
 
 
-class BsRoformerCriteria(TorchCriteria):
+@register()
+class TorchBsRoformerCriteria(TorchCriteria):
     def __init__(
         self,
         num_stems: int,
         resolution_weight: float,
-        window_sizes: tuple[int],
-        window_fn: Callable,
         stft_n_fft: int,
+        window_sizes: tuple[int],
+        window_fn: Literal["hann"],
+        **kwargs,
     ) -> None:
-        super().__init__()
+        super().__init__(**kwargs)
 
         self.num_stems = num_stems
-        self.multi_stft_resolution_loss_weight = resolution_weight
-        self.multi_stft_resolutions_window_sizes = window_sizes
-        self.window_fn = window_fn
+        self.resolution_weight = resolution_weight
+        self.window_sizes = window_sizes
         self.stft_n_fft = stft_n_fft
+
+        match window_fn:
+            case "hann":
+                self.window_fn = torch.hann_window
 
     def calculate_loss(self, recon_audio: Tensor, target: Tensor) -> dict[str, Tensor]:
         if self.num_stems > 1:
@@ -37,7 +44,7 @@ class BsRoformerCriteria(TorchCriteria):
         audio_loss = F.l1_loss(recon_audio, target)
 
         multi_stft_resolution_loss = 0.0
-        for window_size in self.multi_stft_resolutions_window_sizes:
+        for window_size in self.window_sizes:
             res_stft_kwargs = {
                 "n_fft": max(
                     window_size, self.stft_n_fft
@@ -54,7 +61,7 @@ class BsRoformerCriteria(TorchCriteria):
 
             multi_stft_resolution_loss = multi_stft_resolution_loss + F.l1_loss(recon_Y, target_Y)
 
-        weighted_multi_resolution_loss = multi_stft_resolution_loss * self.multi_stft_resolution_loss_weight
+        weighted_multi_resolution_loss = multi_stft_resolution_loss * self.resolution_weight
 
         total_loss = audio_loss + weighted_multi_resolution_loss
 
