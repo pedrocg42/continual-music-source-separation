@@ -19,10 +19,10 @@ train:
             split: train
       dataloader:
         name: TorchDataLoader
-        num_workers: 4
+        num_workers: 0
         batch_size: 16
         decoder:
-          name: Decoder
+          name: MusicSourceDecoder
         data_transforms:
           - name: RandomAudioChunk
             kwargs:
@@ -36,10 +36,10 @@ train:
           split: validation
       dataloader:
         name: TorchDataLoader
-        num_workers: 4
+        num_workers: 0
         batch_size: 16
         decoder:
-          name: Decoder
+          name: MusicSourceDecoder
         data_transforms:
           - name: RandomAudioChunk
             kwargs:
@@ -87,10 +87,10 @@ evaluation:
       split: validation
   dataloader:
     name: TorchDataLoader
-    num_workers: 4
+    num_workers: 0
     batch_size: 16
     decoder:
-      name: Decoder
+      name: MusicSourceDecoder
     data_transforms:
       - name: RandomAudioChunk
         kwargs:

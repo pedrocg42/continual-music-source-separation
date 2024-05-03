@@ -2,7 +2,7 @@ import os
 
 import torch
 from bs_roformer import BSRoformer
-from madre.base.data.data_decoder import DataDecoder
+from madre.base.data.decoder import Decoder
 from madre.extra.torch.data.torch_data_loader import TorchDataLoader
 
 import config
@@ -54,7 +54,7 @@ data_transforms = [
     StereoToBatch(),
     ToTorchTensor(),
 ]
-decoder = DataDecoder(data_transforms=data_transforms)
+decoder = Decoder(data_transforms=data_transforms)
 
 data_loader = TorchDataLoader(
     dataset=dataset_train,

@@ -7,7 +7,7 @@ from madre.base.data.dataset.dataset import Dataset
 from musdb.audio_classes import MultiTrack
 from torch import Tensor
 
-STEMS = ["mixture", "drums", "bass", "accompaniment", "vocals"]
+STEMS = ["mixture", "vocals", "drums", "bass", "other"]
 
 
 @register()
@@ -23,7 +23,13 @@ class MUSDB18(Dataset):
     ) -> None:
         super().__init__(name=name, base_path=base_path, **kwargs)
 
-        self.targets = targets
+        if isinstance(targets, str):
+            if targets == "all":
+                self.targets = STEMS[1:]
+            else:
+                self.targets = [targets]
+        else:
+            self.targets = targets
         self.split = split
 
         self.split2subset = {
