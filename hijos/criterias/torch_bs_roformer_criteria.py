@@ -31,7 +31,7 @@ class TorchBsRoformerCriteria(TorchCriteria):
             case "hann":
                 self.window_fn = torch.hann_window
 
-    def calculate_loss(self, recon_audio: Tensor, target: Tensor) -> dict[str, Tensor]:
+    def forward(self, recon_audio: Tensor, target: Tensor) -> dict[str, Tensor]:
         if self.num_stems > 1:
             assert target.ndim == 4 and target.shape[1] == self.num_stems
 

@@ -1,13 +1,21 @@
 import numpy as np
+from einops import rearrange
 from madre.base.container.register import register
 from madre.base.data.dataset.dataset_item import DatasetItem
 from madre.evaluation.evaluators.evaluator import Evaluator
+from torch import Tensor
 
 
 @register()
 class MusicSourceSeparationEvaluator(Evaluator):
-    def __init__(self, apply_softmax: bool = False, **kwargs) -> None:
+    def __init__(
+        self, chunk_length: int, hop_length: int, stereo: bool = True, apply_softmax: bool = False, **kwargs
+    ) -> None:
         super().__init__(**kwargs)
+
+        self.chunk_length = chunk_length
+        self.hop_length = hop_length
+        self.stereo = stereo
         self.apply_softmax = apply_softmax
 
     def execute(
@@ -34,13 +42,39 @@ class MusicSourceSeparationEvaluator(Evaluator):
         preds = self.softmax(feature) if self.apply_softmax else feature
         dataset_item.score = 1.0 - preds[0]
 
-    def execute_batch(self, features: np.ndarray) -> np.ndarray:
-        return 1.0 - features[:, 0]
+    def execute_batch(self, predictions: Tensor, targets: Tensor) -> tuple[Tensor, Tensor]:
+        breakpoint()
+        predictions = rearrange(predictions.numpy(), "(b s) stems 1 l -> b stems s l", s=2)
+        targets = rearrange(targets.numpy(), "(b s) stems 1 l -> b stems s l", s=2)
+        num_chunks, num_stems, num_channels, chunk_length = targets.shape
+        reconstructed_prediction = np.zeros(
+            (num_stems, num_channels, self.hop_length * num_chunks), dtype=np.float32
+        )
+        reconstructed_target = np.zeros(
+            (num_stems, num_channels, chunk_length * num_chunks), dtype=np.float32
+        )
+        breakpoint()
+        for i, (pred, y) in enumerate(zip(predictions, targets, strict=True)):
+            if i == 0:
+                window = self.trapzoid_window_function(start=False)
+            elif (num_chunks + 1) == num_chunks:
+                window = self.trapzoid_window_function(end=False)
+            else:
+                window = self.trapzoid_window_function()
+            pred *= window[: len(pred)]
+            start = i * self.hop_length
+            end = start + self.chunk_length
+            reconstructed_prediction[:, :, start:end] = pred
+            reconstructed_target[:, :, start:end] = y
+        breakpoint()
+        return predictions, targets
 
-    @staticmethod
-    def softmax(x):
-        max = np.max(x, axis=0, keepdims=True)  # returns max of each row and keeps same dims
-        e_x = np.exp(x - max)  # subtracts each row with its max value
-        sum = np.sum(e_x, axis=0, keepdims=True)  # returns sum of each row and keeps same dims
-        f_x = e_x / sum
-        return f_x
+    def trapzoid_window_function(self, start: bool = True, end: bool = True) -> np.ndarray:
+        slope_length = self.chunk_length - self.hop_length
+        slope = np.arange(slope_length) / slope_length
+        window = np.ones(self.chunk_length)
+        if start:
+            window[:slope_length] = slope
+        if end:
+            window[-slope_length:] = slope[::-1]
+        return window

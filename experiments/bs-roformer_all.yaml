@@ -27,6 +27,7 @@ train:
           - name: RandomAudioChunk
             kwargs:
               chunk_length: 352800
+              stereo: True
           - name: StereoToBatch
           - name: ToTorchTensor
     eval:
@@ -37,24 +38,26 @@ train:
       dataloader:
         name: TorchDataLoader
         num_workers: 0
-        batch_size: 16
+        batch_size: 1
         decoder:
           name: MusicSourceDecoder
         data_transforms:
-          - name: RandomAudioChunk
+          - name: AudioToChunks
             kwargs:
               chunk_length: 352800
+              hop_length: 308700
+              stereo: True
           - name: StereoToBatch
           - name: ToTorchTensor
   model:
     name: TorchBSRoformer
     kwargs:
-      dim: 512
-      depth: 3
+      dim: 384
+      depth: 1
       time_transformer_depth: 1
       freq_transformer_depth: 1
       num_stems: 4
-      stereo: True
+      stereo: False
       stft_n_fft: 2048
       window_sizes: [4096, 2048, 1024, 512, 256]
       window_fn: hann
@@ -73,9 +76,17 @@ train:
       momentum: 0.9
       weight_decay: 2.0e-05
   looper:
-    name: TorchLooper
+    name: MusicSourceSeparationLooper
+    kwargs:
+      batch_size: 4
+      compile: False
+      use_gpu: False
   evaluator:
     name: MusicSourceSeparationEvaluator
+    kwargs:
+      chunk_length: 352800
+      hop_length: 308700
+      stereo: True
   metrics:
     - name: MusicSourceSeparationMetric
   saver:
