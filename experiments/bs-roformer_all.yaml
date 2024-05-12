@@ -41,6 +41,8 @@ train:
         batch_size: 1
         decoder:
           name: MusicSourceDecoder
+          kwargs:
+            stereo_to_batch: False
         data_transforms:
           - name: AudioToChunks
             kwargs:
@@ -103,18 +105,22 @@ evaluation:
     decoder:
       name: MusicSourceDecoder
     data_transforms:
-      - name: RandomAudioChunk
+      - name: AudioToChunks
         kwargs:
           chunk_length: 352800
+          hop_length: 308700
+          stereo: True
       - name: StereoToBatch
       - name: ToTorchTensor
-  algorithm:
-    name: Algorithm
-    processor:
-      name: TorchModelProcessor
+  processor:
+    name: TorchModelProcessor
+    kwargs:
+      use_gpu: False
   evaluator:
-    name: MusicSourceEvaluator
-  metrics_executor:
-    name: DefaultMetricExecutor
-    metrics:
-      - name: MusicSourceMetric
+    name: MusicSourceSeparationEvaluator
+    kwargs:
+      chunk_length: 352800
+      hop_length: 308700
+      stereo: True
+  metrics:
+    - name: MusicSourceSeparationMetric

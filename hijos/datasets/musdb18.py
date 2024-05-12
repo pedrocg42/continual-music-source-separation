@@ -16,7 +16,7 @@ class MUSDB18(Dataset):
         self,
         name: str = "musdb18",
         base_path: str = os.getenv("DATASETS_PATH", "."),
-        targets: list[str] | None = None,
+        targets: list[str] | str = "all",
         split: str | None = None,
         is_wav: bool = False,
         **kwargs,
@@ -71,7 +71,7 @@ class MUSDB18(Dataset):
                     target_audios = track.targets[target].audio[np.newaxis]
                 else:
                     target_audios = np.vstack([target_audios, track.targets[target].audio[np.newaxis]])
-
+        self.position += 1
         return mixture, target_audios
 
 

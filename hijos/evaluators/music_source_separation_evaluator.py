@@ -1,7 +1,6 @@
 import numpy as np
 from einops import rearrange
 from madre.base.container.register import register
-from madre.base.data.dataset.dataset_item import DatasetItem
 from madre.evaluation.evaluators.evaluator import Evaluator
 from torch import Tensor
 
@@ -18,42 +17,20 @@ class MusicSourceSeparationEvaluator(Evaluator):
         self.stereo = stereo
         self.apply_softmax = apply_softmax
 
-    def execute(
-        self,
-        dataset_item: DatasetItem,
-        **kwargs,
-    ):
-        """
-            Compute non-genuine probability for the input features dict items.
-        :param features_dict: Dict[str, Any]
-            Features dict following the format below:
-                * { "frame_key": Any}
-                    or,
-                * {"frame_hey": {"features_key": Any}
-        :return: float
-            Score!
-        """
-        if len(dataset_item.features) > 1:
-            raise RuntimeError(
-                "BW Evaluator Error: Found features for several frames, while evaluator expects only one"
-            )
-        frame_features = list(dataset_item.features.values())[0]
-        _, feature = next(iter(frame_features.items()))
-        preds = self.softmax(feature) if self.apply_softmax else feature
-        dataset_item.score = 1.0 - preds[0]
-
-    def execute_batch(self, predictions: Tensor, targets: Tensor) -> tuple[Tensor, Tensor]:
-        breakpoint()
-        predictions = rearrange(predictions.numpy(), "(b s) stems 1 l -> b stems s l", s=2)
-        targets = rearrange(targets.numpy(), "(b s) stems 1 l -> b stems s l", s=2)
-        num_chunks, num_stems, num_channels, chunk_length = targets.shape
+    def execute(self, predictions: Tensor, targets: Tensor) -> tuple[np.ndarray, np.ndarray]:
+        predictions = rearrange(predictions.numpy(), "(b s) stems 1 l -> b stems l s", s=2)
+        predictions = rearrange(predictions, "b stems l s -> b stems s l")
+        targets = rearrange(targets.numpy(), "(b s) stems 1 l -> b stems l s", s=2)
+        targets = rearrange(targets, "b stems l s -> b stems s l")
+        num_chunks, num_stems, num_channels, _ = targets.shape
         reconstructed_prediction = np.zeros(
-            (num_stems, num_channels, self.hop_length * num_chunks), dtype=np.float32
+            (num_stems, num_channels, self.hop_length * num_chunks + self.chunk_length - self.hop_length),
+            dtype=np.float32,
         )
         reconstructed_target = np.zeros(
-            (num_stems, num_channels, chunk_length * num_chunks), dtype=np.float32
+            (num_stems, num_channels, self.hop_length * num_chunks + self.chunk_length - self.hop_length),
+            dtype=np.float32,
         )
-        breakpoint()
         for i, (pred, y) in enumerate(zip(predictions, targets, strict=True)):
             if i == 0:
                 window = self.trapzoid_window_function(start=False)
@@ -61,13 +38,11 @@ class MusicSourceSeparationEvaluator(Evaluator):
                 window = self.trapzoid_window_function(end=False)
             else:
                 window = self.trapzoid_window_function()
-            pred *= window[: len(pred)]
+            pred *= window[: pred.shape[-1]]
             start = i * self.hop_length
-            end = start + self.chunk_length
-            reconstructed_prediction[:, :, start:end] = pred
-            reconstructed_target[:, :, start:end] = y
-        breakpoint()
-        return predictions, targets
+            reconstructed_prediction[:, :, start : start + pred.shape[-1]] = pred
+            reconstructed_target[:, :, start : start + self.chunk_length] = y
+        return reconstructed_prediction, reconstructed_target
 
     def trapzoid_window_function(self, start: bool = True, end: bool = True) -> np.ndarray:
         slope_length = self.chunk_length - self.hop_length

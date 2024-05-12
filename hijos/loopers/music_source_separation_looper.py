@@ -19,20 +19,21 @@ class MusicSourceSeparationLooper(TorchLooper):
         iterator = tqdm(
             self.eval_iterator,
             total=self.max_steps if self.max_steps else self.eval_batch_count,
-            desc="Evaluation",
-            colour="green",
+            desc="👩🏽‍🔬 Evaluation",
+            colour="magenta",
         )
         batch_results = {"loss": []}
-        for i, (inputs, targets) in enumerate(iterator):
-            predictions, loss = self.eval_batch(inputs, targets)
-            batch_results["loss"].append(loss)
-            predictions, targets = self.evaluator.execute_batch(predictions, targets)
-            # Add metrics
-            for metric in self.metrics:
-                metric(predictions, targets)
-                metric.log(epoch)
-            if self.max_steps and i >= self.max_steps:
+        for i, (batch_inputs, batch_targets) in enumerate(iterator):
+            for inputs, targets in zip(batch_inputs, batch_targets, strict=True):
+                predictions, loss = self.eval_batch(inputs, targets)
+                batch_results["loss"].append(loss)
+                predictions, targets = self.evaluator(predictions, targets)
+                for metric in self.metrics:
+                    metric(predictions, targets)
+            if self.max_steps and (i + 1) >= self.max_steps:
                 break
+        for metric in self.metrics:
+            metric.log()
         return {"eval_loss": np.mean(batch_results["loss"])}
 
     @torch.no_grad()
