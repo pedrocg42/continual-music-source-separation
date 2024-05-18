@@ -11,4 +11,6 @@ source .venv/bin/activate
 uv pip install lume
 lume -install -setup
 
+sudo apt install ffmpeg
+
 ```

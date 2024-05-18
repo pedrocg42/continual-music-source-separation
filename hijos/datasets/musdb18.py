@@ -34,7 +34,7 @@ class MUSDB18(Dataset):
 
         self.split2subset = {
             "train": "train",
-            "val": "train",
+            "val": "test",
             "test": "test",
             None: ["train", "test"],
         }
@@ -51,14 +51,16 @@ class MUSDB18(Dataset):
         return self
 
     def __len__(self) -> int:
-        return len(self.mus)
+        return len(self.mus) * 10
 
     def __next__(self) -> tuple[Tensor, Tensor]:
         if self.position >= len(self):
             self.position = 0
             raise StopIteration
 
-        track: MultiTrack = self.mus[self.position]
+        position = self.position % len(self.mus)
+
+        track: MultiTrack = self.mus[position]
         mixture = track.audio
 
         if self.targets is None:
