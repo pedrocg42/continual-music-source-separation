@@ -20,7 +20,7 @@ train:
       dataloader:
         name: TorchDataLoader
         num_workers: 4
-        batch_size: 1
+        batch_size: 2
         decoder:
           name: MusicSourceDecoder
         data_transforms:
@@ -80,7 +80,7 @@ train:
   looper:
     name: MusicSourceSeparationLooper
     kwargs:
-      batch_size: 1
+      batch_size: 2
       compile: False
       use_gpu: True
   evaluator:
@@ -101,7 +101,7 @@ evaluation:
   dataloader:
     name: TorchDataLoader
     num_workers: 4
-    batch_size: 1
+    batch_size: 2
     decoder:
       name: MusicSourceDecoder
     data_transforms:
