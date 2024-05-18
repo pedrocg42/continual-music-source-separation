@@ -33,14 +33,12 @@ dev = [
   "pytest-clarity",
   "pip-audit",
 ]
-[project.scripts]
-madre-experiment = "madre.cli.madre_experiment:main"
 
 [tool.hatch.version]
 path = "hijos/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-include = ["madre", "madre_cli"]
+include = ["hijos"]
 
 
 [tool.pytest.ini_options]
