@@ -57,17 +57,9 @@ train:
           - name: StereoToBatch
           - name: ToTorchTensor
   model:
-    name: TorchBSRoformer
+    name: DemucsV2
     kwargs:
-      dim: 384
-      depth: 1
-      time_transformer_depth: 1
-      freq_transformer_depth: 1
-      num_stems: 4
-      stereo: False
-      stft_n_fft: 2048
-      window_sizes: [4096, 2048, 1024, 512, 256]
-      window_fn: hann
+      sources: all
   criteria:
     name: TorchBsRoformerCriteria
     kwargs:

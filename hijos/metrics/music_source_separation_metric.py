@@ -1,8 +1,8 @@
 import numpy as np
-from einops import rearrange
+import torch
 from madre import register
 from madre.evaluation.metrics.metric import Metric
-from museval import evaluate
+from torch import Tensor
 
 STEMS = ["mixture", "vocals", "drums", "bass", "other"]
 
@@ -21,40 +21,65 @@ class MusicSourceSeparationMetric(Metric):
         self._init_metrics()
 
     def _init_metrics(self) -> None:
-        self.metrics: dict[str, list[float]] = {
-            "SDR": [],
-            **{f"SDR_{target}": [] for target in self.targets},
-            "ISR": [],
-            **{f"ISR_{target}": [] for target in self.targets},
-            "SIR": [],
-            **{f"SIR_{target}": [] for target in self.targets},
-            "SAR": [],
-            **{f"SAR_{target}": [] for target in self.targets},
-        }
+        self.metrics: dict[str, list[float]] = {"SDR": [], **{f"SDR_{target}": [] for target in self.targets}}
 
-    def calculate(self, batch_inputs: np.ndarray, batch_targets: np.ndarray) -> None:
-        if batch_inputs.ndim == 3:
+    def calculate(self, batch_preds: Tensor, batch_targets: Tensor) -> None:
+        if batch_preds.ndim == 3:
             # add batch dimension
-            batch_inputs = batch_inputs[np.newaxis]
-            batch_targets = batch_targets[np.newaxis]
+            batch_preds = batch_preds[None]
+            batch_targets = batch_targets[None]
 
-        for inputs, targets in zip(batch_inputs, batch_targets, strict=True):
-            inputs = rearrange(inputs, "nsrc nchan nsampl -> nsrc nsampl nchan")
-            targets = rearrange(targets, "nsrc nchan nsampl -> nsrc nsampl nchan")
-            sdr, isr, sir, sar = evaluate(targets, inputs)
-            for i, (sdr_stem, isr_stem, sir_stem, sar_stem) in enumerate(
-                zip(sdr, isr, sir, sar, strict=True)
-            ):
-                self.metrics[f"SDR_{self.targets[i]}"].append(np.nanmean(sdr_stem))
-                self.metrics[f"ISR_{self.targets[i]}"].append(np.nanmean(isr_stem))
-                self.metrics[f"SIR_{self.targets[i]}"].append(np.nanmean(sir_stem))
-                self.metrics[f"SAR_{self.targets[i]}"].append(np.nanmean(sar_stem))
-            self.metrics["SDR"].append(np.nanmean(sdr))
-            self.metrics["ISR"].append(np.nanmean(isr))
-            self.metrics["SDR"].append(np.nanmean(sir))
-            self.metrics["ISR"].append(np.nanmean(sar))
+            sdr = (
+                MusicSourceSeparationMetric.calculare_sdr_demucs(
+                    batch_targets[..., : batch_preds.shape[-1]], batch_preds
+                )
+                .numpy()
+                .T
+            )
+            self.metrics["SDR"].append(np.mean(sdr))
+            for sdr_target in sdr:
+                self.metrics["SDR_target"].append(np.mean(sdr_target))
 
     def log(self, epoch: int | None = None) -> None:
         for metric_name, metric in self.metrics.items():
             self.experiment_tracker.log_metric(metric_name, np.mean(metric), step=epoch)
         self._init_metrics()
+
+    @staticmethod
+    def calculare_sdr_demucs(references: Tensor, estimates: Tensor) -> Tensor:
+        """
+        Compute the SDR according to demucs repository
+        https://github.com/facebookresearch/demucs
+        """
+        assert references.dim() == 4
+        assert estimates.dim() == 4
+        delta = 1e-7  # avoid numerical errors
+        num = torch.sum(torch.square(references), dim=(2, 3)) + delta
+        den = torch.sum(torch.square(references - estimates), dim=(2, 3)) + delta
+        scores = 10 * torch.log10(num / den)
+        return scores.T
+
+    @staticmethod
+    def calculare_sdr_bytedance(references: Tensor, estimates: Tensor) -> Tensor:
+        """
+        Compute the SDR according to bytedance repository
+        https://github.com/bytedance/music_source_separation
+        """
+        assert references.dim() == 4
+        assert estimates.dim() == 4
+        delta = 1e-7  # avoid numerical errors
+        num = torch.sum(torch.square(references), dim=(2, 3))
+        den = torch.sum(torch.square(references - estimates), dim=(2, 3))
+        num += delta
+        den += delta
+        scores = 10 * torch.log10(num / den)
+        return scores
+
+    def calculate_sdr(reference: np.ndarray, estimated: np.ndarray) -> float:
+        s_true = reference
+        s_artif = estimated - reference
+        sdr = 10.0 * (
+            np.log10(np.clip(np.mean(s_true**2), 1e-8, np.inf))
+            - np.log10(np.clip(np.mean(s_artif**2), 1e-8, np.inf))
+        )
+        return sdr

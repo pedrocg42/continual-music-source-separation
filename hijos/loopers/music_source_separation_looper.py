@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import torch
 from madre.base.container.register import register
@@ -27,9 +29,9 @@ class MusicSourceSeparationLooper(TorchLooper):
             for inputs, targets in zip(batch_inputs, batch_targets, strict=True):
                 predictions, loss = self.eval_batch(inputs, targets)
                 batch_results["loss"].append(loss)
-                predictions, targets = self.evaluator(predictions, targets)
+                # predictions, targets = self.evaluator(predictions, targets)
                 for metric in self.metrics:
-                    metric(predictions, targets)
+                    metric(predictions.cpu(), targets)
             if self.max_steps and (i + 1) >= self.max_steps:
                 break
         for metric in self.metrics:
@@ -40,12 +42,16 @@ class MusicSourceSeparationLooper(TorchLooper):
     def eval_batch(
         self, batch_inputs: torch.Tensor, batch_targets: torch.Tensor
     ) -> tuple[torch.Tensor, float]:
-        self.model.eval()
         predictions = []
         loss = []
-        for x_subbatch, y_subbatch in zip(
-            batch_inputs.split(self.batch_size), batch_targets.split(self.batch_size), strict=True
-        ):
+
+        iterator = tqdm(
+            zip(batch_inputs.split(self.batch_size), batch_targets.split(self.batch_size), strict=True),
+            total=math.ceil(len(batch_inputs) / self.batch_size),
+            desc="Inference Song by Batches",
+            colour="blue",
+        )
+        for x_subbatch, y_subbatch in iterator:
             x_subbatch = x_subbatch.to(self.device, non_blocking=True)
             y_subbatch = y_subbatch.to(self.device, non_blocking=True)
             batch_predictions = self.model(x_subbatch)
