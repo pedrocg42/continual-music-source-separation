@@ -40,11 +40,14 @@ class MusicSourceSeparationLooper(TorchLooper):
     def eval_batch(
         self, batch_inputs: torch.Tensor, batch_targets: torch.Tensor
     ) -> tuple[torch.Tensor, float]:
+        self.model.eval()
         predictions = []
         loss = []
         for x_subbatch, y_subbatch in zip(
             batch_inputs.split(self.batch_size), batch_targets.split(self.batch_size), strict=True
         ):
+            x_subbatch = x_subbatch.to(self.device, non_blocking=True)
+            y_subbatch = y_subbatch.to(self.device, non_blocking=True)
             batch_predictions = self.model(x_subbatch)
             predictions.append(batch_predictions)
             loss.append(self.criteria(batch_predictions, y_subbatch)["loss"].item())

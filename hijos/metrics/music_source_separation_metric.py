@@ -33,7 +33,6 @@ class MusicSourceSeparationMetric(Metric):
         }
 
     def calculate(self, batch_inputs: np.ndarray, batch_targets: np.ndarray) -> None:
-        breakpoint()
         if batch_inputs.ndim == 3:
             # add batch dimension
             batch_inputs = batch_inputs[np.newaxis]

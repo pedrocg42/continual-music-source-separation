@@ -18,7 +18,7 @@ class MusicSourceSeparationEvaluator(Evaluator):
         self.apply_softmax = apply_softmax
 
     def execute(self, predictions: Tensor, targets: Tensor) -> tuple[np.ndarray, np.ndarray]:
-        predictions = rearrange(predictions.numpy(), "(b s) stems 1 l -> b stems l s", s=2)
+        predictions = rearrange(predictions.cpu().numpy(), "(b s) stems 1 l -> b stems l s", s=2)
         predictions = rearrange(predictions, "b stems l s -> b stems s l")
         targets = rearrange(targets.numpy(), "(b s) stems 1 l -> b stems l s", s=2)
         targets = rearrange(targets, "b stems l s -> b stems s l")
