@@ -9,10 +9,10 @@ from tqdm import tqdm
 
 @register()
 class MusicSourceSeparationLooper(TorchLooper):
-    def __init__(self, batch_size: int, **kwargs):
+    def __init__(self, eval_batch_size: int, **kwargs):
         super().__init__(**kwargs)
 
-        self.batch_size = batch_size
+        self.eval_batch_size = eval_batch_size
 
     @torch.no_grad()
     def eval_one_epoch(self, epoch: int) -> dict[str, float]:
@@ -31,11 +31,11 @@ class MusicSourceSeparationLooper(TorchLooper):
                 batch_results["loss"].append(loss)
                 # predictions, targets = self.evaluator(predictions, targets)
                 for metric in self.metrics:
-                    metric(predictions.cpu(), targets)
+                    metric(predictions, targets)
             if self.max_steps and (i + 1) >= self.max_steps:
                 break
         for metric in self.metrics:
-            metric.log()
+            metric.log(epoch)
         return {"eval_loss": np.mean(batch_results["loss"])}
 
     @torch.no_grad()
@@ -46,8 +46,12 @@ class MusicSourceSeparationLooper(TorchLooper):
         loss = []
 
         iterator = tqdm(
-            zip(batch_inputs.split(self.batch_size), batch_targets.split(self.batch_size), strict=True),
-            total=math.ceil(len(batch_inputs) / self.batch_size),
+            zip(
+                batch_inputs.split(self.eval_batch_size),
+                batch_targets.split(self.eval_batch_size),
+                strict=True,
+            ),
+            total=math.ceil(len(batch_inputs) / self.eval_batch_size),
             desc="Inference Song by Batches",
             colour="blue",
         )
@@ -55,6 +59,6 @@ class MusicSourceSeparationLooper(TorchLooper):
             x_subbatch = x_subbatch.to(self.device, non_blocking=True)
             y_subbatch = y_subbatch.to(self.device, non_blocking=True)
             batch_predictions = self.model(x_subbatch)
-            predictions.append(batch_predictions)
             loss.append(self.criteria(batch_predictions, y_subbatch)["loss"].item())
+            predictions.append(batch_predictions.cpu())
         return torch.vstack(predictions), np.mean(loss)

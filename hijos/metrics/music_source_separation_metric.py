@@ -24,21 +24,20 @@ class MusicSourceSeparationMetric(Metric):
         self.metrics: dict[str, list[float]] = {"SDR": [], **{f"SDR_{target}": [] for target in self.targets}}
 
     def calculate(self, batch_preds: Tensor, batch_targets: Tensor) -> None:
-        if batch_preds.ndim == 3:
+        if batch_preds.ndim == 4:
             # add batch dimension
             batch_preds = batch_preds[None]
             batch_targets = batch_targets[None]
+        elif batch_preds.ndim < 4:
+            raise RuntimeError("Not enough dimensions")
 
-            sdr = (
-                MusicSourceSeparationMetric.calculare_sdr_demucs(
-                    batch_targets[..., : batch_preds.shape[-1]], batch_preds
-                )
-                .numpy()
-                .T
-            )
+        for preds, targets in zip(batch_preds, batch_targets, strict=True):
+            sdr = MusicSourceSeparationMetric.calculare_sdr_demucs(
+                targets[..., : preds.shape[-1]], preds
+            ).numpy()
             self.metrics["SDR"].append(np.mean(sdr))
-            for sdr_target in sdr:
-                self.metrics["SDR_target"].append(np.mean(sdr_target))
+            for sdr_target, target_name in zip(sdr, self.targets, strict=True):
+                self.metrics[f"SDR_{target_name}"].append(np.mean(sdr_target))
 
     def log(self, epoch: int | None = None) -> None:
         for metric_name, metric in self.metrics.items():

@@ -20,6 +20,8 @@ train:
             split: train
       dataloader:
         name: TorchDataLoader
+        kwargs:
+          drop_last: True
         num_workers: 4
         batch_size: 2
         decoder:
@@ -31,8 +33,6 @@ train:
               stereo: True
           - name: StereoToBatch
           - name: ToTorchTensor
-        kwargs:
-          drop_last: False
     eval:
       datasets:
         - name: MUSDB18HQ
@@ -42,6 +42,9 @@ train:
             split: valid
       dataloader:
         name: TorchDataLoader
+        kwargs:
+          drop_last: False
+          shuffle_each_epoch: False
         num_workers: 1
         batch_size: 1
         decoder:
@@ -85,7 +88,7 @@ train:
   looper:
     name: MusicSourceSeparationLooper
     kwargs:
-      batch_size: 2
+      eval_batch_size: 8
       compile: False
       use_gpu: True
   evaluator:
@@ -106,10 +109,15 @@ evaluation:
         subsets: [test]
   dataloader:
     name: TorchDataLoader
-    num_workers: 4
-    batch_size: 2
+    kwargs:
+      drop_last: False
+      shuffle_each_epoch: False
+    num_workers: 1
+    batch_size: 1
     decoder:
       name: MusicSourceDecoder
+      kwargs:
+        stereo_to_batch: False
     data_transforms:
       - name: AudioToChunks
         kwargs:
@@ -118,12 +126,11 @@ evaluation:
           stereo: True
       - name: StereoToBatch
       - name: ToTorchTensor
-    kwargs:
-      drop_last: False
   processor:
-    name: TorchModelProcessor
+    name: MusicSourceSeparationProcessor
     kwargs:
       use_gpu: True
+      eval_batch_size: 8
   evaluator:
     name: MusicSourceSeparationEvaluator
     kwargs:
