@@ -1,13 +1,17 @@
 import os
 
+import h5py
 import musdb
 import numpy as np
+from loguru import logger
 from madre.base.container.register import register
 from madre.base.data.dataset.dataset import Dataset
+from madre.base.data.dataset.dataset_item import DatasetItem
 from musdb.audio_classes import MultiTrack
-from torch import Tensor
+from tqdm import tqdm
 
 STEMS = ["mixture", "vocals", "drums", "bass", "other"]
+TARGETS = ["vocals", "drums", "bass", "other", "accompaniment"]
 
 
 @register()
@@ -17,6 +21,7 @@ class MUSDB18(Dataset):
         name: str = "musdb18",
         base_path: str = os.getenv("DATASETS_PATH", "."),
         targets: list[str] | str = "all",
+        subsets: list[str] | None = None,
         split: str | None = None,
         is_wav: bool = False,
         **kwargs,
@@ -25,56 +30,50 @@ class MUSDB18(Dataset):
 
         if isinstance(targets, str):
             if targets == "all":
-                self.targets = STEMS[1:]
+                self.targets = TARGETS[:4]
             else:
                 self.targets = [targets]
         else:
             self.targets = targets
+        self.subsets = subsets
         self.split = split
 
-        self.split2subset = {
-            "train": "train",
-            "val": "test",
-            "test": "test",
-            None: ["train", "test"],
-        }
+        self.dataset_path = os.path.join(self.base_path, self.name)
+        self.h5_folder = os.path.join(self.dataset_path, "h5")
+        os.makedirs(self.h5_folder, exist_ok=True)
 
-        self.mus = musdb.DB(
-            root=os.path.join(self.base_path, self.name),
-            is_wav=is_wav,
-            subsets=self.split2subset[self.split],
-            split=self.split,
-        )
-        self.position = 0
+        self.mus = musdb.DB(root=self.dataset_path, is_wav=is_wav, subsets=self.subsets, split=self.split)
+        self.parse()
 
-    def __iter__(self) -> "MUSDB18":
-        return self
+    def parse(self) -> None:
+        logger.info(f"Parse {self.__class__.__name__}")
+        for idx in tqdm(range(len(self.mus))):
+            track: MultiTrack = self.mus[idx]
 
-    def __len__(self) -> int:
-        return len(self.mus) * 10
+            file_path = os.path.join(self.h5_folder, f"{track.name}.h5")
+            self.items[track.name] = DatasetItem(id=track.name, data=file_path)
 
-    def __next__(self) -> tuple[Tensor, Tensor]:
-        if self.position >= len(self):
-            self.position = 0
-            raise StopIteration
+            if os.path.isfile(file_path):
+                continue
 
-        position = self.position % len(self.mus)
+            with h5py.File(file_path, mode="w") as hf:
+                hf.create_dataset("mixture", data=track.audio.astype(np.float32))
+                for target in TARGETS:
+                    hf.create_dataset(target, data=track.targets[target].audio.astype(np.float32))
 
-        track: MultiTrack = self.mus[position]
-        mixture = track.audio
+    def __next__(self) -> tuple[str, DatasetItem]:
+        id, item = super().__next__()
 
-        if self.targets is None:
-            # returning all of them
-            target_audios = track.stems[1:]
-        else:
-            target_audios = None
-            for target in self.targets:
-                if target_audios is None:
-                    target_audios = track.targets[target].audio[np.newaxis]
-                else:
-                    target_audios = np.vstack([target_audios, track.targets[target].audio[np.newaxis]])
-        self.position += 1
-        return mixture, target_audios
+        with h5py.File(item.data, mode="w") as hf:
+            mixture = hf.get("mixture")
+
+            targets = np.zeros((len(self.targets), len(mixture), 2), dtype=np.float32)
+            for i, target_name in enumerate(self.targets):
+                targets[i] = hf.get(target_name)[np.newaxis]
+
+        item.data = mixture
+        item.target = targets
+        return id, item
 
 
 @register()
