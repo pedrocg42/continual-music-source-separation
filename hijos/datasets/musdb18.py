@@ -57,23 +57,23 @@ class MUSDB18(Dataset):
                 continue
 
             with h5py.File(file_path, mode="w") as hf:
-                hf.create_dataset("mixture", data=track.audio.astype(np.float32))
+                data = track.audio.astype(np.float32)
+                hf.create_dataset("mixture", data=data)
                 for target in TARGETS:
-                    hf.create_dataset(target, data=track.targets[target].audio.astype(np.float32))
+                    data = track.targets[target].audio.astype(np.float32)
+                    hf.create_dataset(target, data=data)
 
-    def __next__(self) -> tuple[str, DatasetItem]:
-        id, item = super().__next__()
+    def __next__(self) -> DatasetItem:
+        item = super().__next__()
 
-        with h5py.File(item.data, mode="w") as hf:
-            mixture = hf.get("mixture")
+        with h5py.File(item.data, mode="r") as hf:
+            mixture = np.asarray(hf.get("mixture"))
 
             targets = np.zeros((len(self.targets), len(mixture), 2), dtype=np.float32)
             for i, target_name in enumerate(self.targets):
-                targets[i] = hf.get(target_name)[np.newaxis]
+                targets[i] = np.asarray(hf.get(target_name))[np.newaxis]
 
-        item.data = mixture
-        item.target = targets
-        return id, item
+        return DatasetItem(id=item.id, data=mixture, target=targets)
 
 
 @register()
