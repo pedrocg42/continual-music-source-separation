@@ -1,5 +1,5 @@
-experiment_name: bs-roformer_vocals
-experiment_description: BS Roformer experiment with vocals.
+experiment_name: bs-mel-roformer_drums
+experiment_description: BS Mel Roformer experiment with drums.
 experiment_topic: Music-Source-Separation
 experiment_tracker:
   name: MLFlowExperimentTracker
@@ -15,7 +15,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: vocals
+            targets: drums
             subsets: [train]
             split: train
             num_repetions: 25
@@ -38,7 +38,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: vocals
+            targets: drums
             subsets: [train]
             split: valid
       dataloader:
@@ -61,12 +61,12 @@ train:
           - name: StereoToBatch
           - name: ToTorchTensor
   model:
-    name: TorchBSRoformer
+    name: TorchBSMelRoformer
     kwargs:
       dim: 128
-      depth: 4
-      time_transformer_depth: 1
-      freq_transformer_depth: 1
+      depth: 2
+      time_transformer_depth: 2
+      freq_transformer_depth: 2
       heads: 4
       num_stems: 1
       stereo: False
@@ -102,14 +102,14 @@ train:
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: vocals
+        targets: drums
   saver:
     name: TorchModelSaver
 evaluation:
   datasets:
     - name: MUSDB18HQ
       kwargs:
-        targets: vocals
+        targets: drums
         subsets: [test]
   dataloader:
     name: TorchDataLoader
@@ -144,4 +144,4 @@ evaluation:
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: vocals
+        targets: drums

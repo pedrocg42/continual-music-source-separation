@@ -1,5 +1,5 @@
-experiment_name: bs-roformer_all
-experiment_description: BS Roformer main experiment with all stems.
+experiment_name: bs-mel-roformer_vocals
+experiment_description: BS Mel Roformer experiment with vocals.
 experiment_topic: Music-Source-Separation
 experiment_tracker:
   name: MLFlowExperimentTracker
@@ -15,10 +15,10 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: all
+            targets: vocals
             subsets: [train]
             split: train
-            num_repetions: 20
+            num_repetions: 25
       dataloader:
         name: TorchDataLoader
         kwargs:
@@ -38,7 +38,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: vocal
+            targets: vocals
             subsets: [train]
             split: valid
       dataloader:
@@ -61,13 +61,13 @@ train:
           - name: StereoToBatch
           - name: ToTorchTensor
   model:
-    name: TorchBSRoformer
+    name: TorchBSMelRoformer
     kwargs:
-      dim: 64
+      dim: 128
       depth: 2
-      time_transformer_depth: 1
-      freq_transformer_depth: 1
-      heads: 8
+      time_transformer_depth: 2
+      freq_transformer_depth: 2
+      heads: 4
       num_stems: 1
       stereo: False
       stft_n_fft: 2048
@@ -76,7 +76,7 @@ train:
   criteria:
     name: TorchBsRoformerCriteria
     kwargs:
-      num_stems: 4
+      num_stems: 1
       resolution_weight: 1.0
       stft_n_fft: 2048
       window_sizes: [4096, 2048, 1024, 512, 256]
@@ -84,13 +84,15 @@ train:
   optimizer:
     name: TorchAdamWOptimizer
     kwargs:
-      lr: 0.0001
+      lr: 0.01
   looper:
     name: MusicSourceSeparationLooper
     kwargs:
-      eval_batch_size: 8
+      mixed_precision: False
       compile: False
       use_gpu: True
+      accumulate_gradient: 32
+      eval_batch_size: 8
   evaluator:
     name: MusicSourceSeparationEvaluator
     kwargs:
@@ -99,13 +101,15 @@ train:
       stereo: True
   metrics:
     - name: MusicSourceSeparationMetric
+      kwargs:
+        targets: vocals
   saver:
     name: TorchModelSaver
 evaluation:
   datasets:
     - name: MUSDB18HQ
       kwargs:
-        targets: all
+        targets: vocals
         subsets: [test]
   dataloader:
     name: TorchDataLoader
@@ -139,3 +143,5 @@ evaluation:
       stereo: True
   metrics:
     - name: MusicSourceSeparationMetric
+      kwargs:
+        targets: vocals

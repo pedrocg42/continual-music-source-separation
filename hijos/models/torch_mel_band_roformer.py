@@ -7,7 +7,7 @@ from madre.extra.torch.models.torch_base_model import TorchBaseModel
 
 
 @register()
-class TorchMelBandRoformer(TorchBaseModel):
+class TorchBSMelRoformer(TorchBaseModel):
     def __init__(
         self,
         dim: int,
