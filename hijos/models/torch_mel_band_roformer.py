@@ -1,13 +1,13 @@
 from typing import Literal
 
 import torch
-from bs_roformer import BSRoformer
+from bs_roformer import MelBandRoformer
 from madre import register
 from madre.extra.torch.models.torch_base_model import TorchBaseModel
 
 
 @register()
-class TorchBSRoformer(TorchBaseModel):
+class TorchMelBandRoformer(TorchBaseModel):
     def __init__(
         self,
         dim: int,
@@ -28,7 +28,7 @@ class TorchBSRoformer(TorchBaseModel):
             case "hann":
                 multi_stft_window_fn = torch.hann_window
 
-        self.model = BSRoformer(
+        self.model = MelBandRoformer(
             dim=dim,
             depth=depth,
             time_transformer_depth=time_transformer_depth,

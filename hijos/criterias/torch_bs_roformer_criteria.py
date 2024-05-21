@@ -43,22 +43,23 @@ class TorchBsRoformerCriteria(TorchCriteria):
         audio_loss = F.l1_loss(recon_audio, target)
 
         multi_stft_resolution_loss = 0.0
-        for window_size in self.window_sizes:
-            res_stft_kwargs = {
-                "n_fft": max(
-                    window_size, self.stft_n_fft
-                ),  # not sure what n_fft is across multi resolution stft
-                "win_length": window_size,
-                "return_complex": True,
-                "window": self.window_fn(window_size, device=DEVICE),
-                "hop_length": 147,
-                "normalized": False,
-            }
+        with torch.autocast(enabled=False, device_type="cuda"):
+            for window_size in self.window_sizes:
+                res_stft_kwargs = {
+                    "n_fft": max(
+                        window_size, self.stft_n_fft
+                    ),  # not sure what n_fft is across multi resolution stft
+                    "win_length": window_size,
+                    "return_complex": True,
+                    "window": self.window_fn(window_size, device=DEVICE),
+                    "hop_length": 147,
+                    "normalized": False,
+                }
 
-            recon_Y = stft(rearrange(recon_audio, "... s t -> (... s) t"), **res_stft_kwargs)
-            target_Y = stft(rearrange(target, "... s t -> (... s) t"), **res_stft_kwargs)
+                recon_Y = stft(rearrange(recon_audio, "... s t -> (... s) t"), **res_stft_kwargs)
+                target_Y = stft(rearrange(target, "... s t -> (... s) t"), **res_stft_kwargs)
 
-            multi_stft_resolution_loss = multi_stft_resolution_loss + F.l1_loss(recon_Y, target_Y)
+                multi_stft_resolution_loss = multi_stft_resolution_loss + F.l1_loss(recon_Y, target_Y)
 
         weighted_multi_resolution_loss = multi_stft_resolution_loss * self.resolution_weight
 
