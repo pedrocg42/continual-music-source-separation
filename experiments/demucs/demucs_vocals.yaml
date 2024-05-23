@@ -128,7 +128,7 @@ evaluation:
     kwargs:
       drop_last: False
       shuffle_each_epoch: False
-    num_workers: 1
+    num_workers: 0
     batch_size: 1
     decoder:
       name: MusicSourceDecoder

@@ -8,6 +8,9 @@ from torch import Tensor
 @register()
 class MusicSourceSeparationConcatEvaluator(Evaluator):
     def execute(self, predictions: Tensor, targets: Tensor) -> tuple[np.ndarray, np.ndarray]:
+        if predictions.ndim == 5:
+            predictions = predictions[0]
+            targets = targets[0]
         predictions = rearrange(predictions.cpu(), "b s c l -> s c (b l)")
         targets = rearrange(targets, "b s c l -> s c (b l)")
         return predictions, targets
