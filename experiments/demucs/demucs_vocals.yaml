@@ -1,5 +1,5 @@
-experiment_name: bs-mel-roformer_others
-experiment_description: BS Mel Roformer experiment with others.
+experiment_name: demucs_vocals
+experiment_description: BS Roformer experiment with vocals.
 experiment_topic: Music-Source-Separation
 experiment_tracker:
   name: MLFlowExperimentTracker
@@ -15,7 +15,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: others
+            targets: vocals
             subsets: [train]
             split: train
             num_repetions: 25
@@ -23,22 +23,25 @@ train:
         name: TorchDataLoader
         kwargs:
           drop_last: True
-        num_workers: 4
+        num_workers: 0
         batch_size: 2
         decoder:
           name: MusicSourceDecoder
         data_transforms:
           - name: RandomAudioChunk
             kwargs:
-              chunk_length: 176400
+              chunk_length: 441000
               stereo: True
-          - name: StereoToBatch
           - name: ToTorchTensor
+          - name: Rearrange
+            kwargs:
+              input_pattern: "length channels -> channels length"
+              target_pattern: "sources length channels -> sources channels length"
     eval:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: others
+            targets: vocals
             subsets: [train]
             split: valid
       dataloader:
@@ -55,32 +58,22 @@ train:
         data_transforms:
           - name: AudioToChunks
             kwargs:
-              chunk_length: 176400
-              hop_length: 132300
+              chunk_length: 441000
+              hop_length: 441000
               stereo: True
-          - name: StereoToBatch
           - name: ToTorchTensor
+          - name: Rearrange
+            kwargs:
+              input_pattern: "batch length channels -> batch channels length"
+              target_pattern: "batch sources length channels -> batch sources channels length"
   model:
-    name: TorchBSMelRoformer
+    name: DemucsV2
     kwargs:
-      dim: 128
-      depth: 2
-      time_transformer_depth: 2
-      freq_transformer_depth: 2
-      heads: 4
-      num_stems: 1
-      stereo: False
-      stft_n_fft: 2048
-      window_sizes: [4096, 2048, 1024, 512, 256]
-      window_fn: hann
+      sources: vocal
+      depth: 5
+      channels: 64
   criteria:
-    name: TorchBsRoformerCriteria
-    kwargs:
-      num_stems: 1
-      resolution_weight: 1.0
-      stft_n_fft: 2048
-      window_sizes: [4096, 2048, 1024, 512, 256]
-      window_fn: hann
+    name: TorchSourceSeparationL1Criteria
   optimizer:
     name: TorchAdamWOptimizer
     kwargs:
@@ -90,26 +83,45 @@ train:
     kwargs:
       mixed_precision: False
       compile: False
-      use_gpu: True
-      accumulate_gradient: 32
+      use_gpu: False
       eval_batch_size: 8
   evaluator:
-    name: MusicSourceSeparationEvaluator
-    kwargs:
-      chunk_length: 176400
-      hop_length: 132300
-      stereo: True
+    name: MusicSourceSeparationConcatEvaluator
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: others
+        targets: vocals
   saver:
     name: TorchModelSaver
 evaluation:
   datasets:
     - name: MUSDB18HQ
       kwargs:
-        targets: others
+        targets: vocals
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: bass
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: drums
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: other
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: bass
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: drums
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: other
         subsets: [test]
   dataloader:
     name: TorchDataLoader
@@ -125,23 +137,22 @@ evaluation:
     data_transforms:
       - name: AudioToChunks
         kwargs:
-          chunk_length: 176400
-          hop_length: 132300
+          chunk_length: 441000
+          hop_length: 441000
           stereo: True
-      - name: StereoToBatch
       - name: ToTorchTensor
+      - name: Rearrange
+        kwargs:
+          input_pattern: "batch length channels -> batch channels length"
+          target_pattern: "batch sources length channels -> batch sources channels length"
   processor:
     name: MusicSourceSeparationProcessor
     kwargs:
-      use_gpu: True
+      use_gpu: False
       eval_batch_size: 8
   evaluator:
-    name: MusicSourceSeparationEvaluator
-    kwargs:
-      chunk_length: 176400
-      hop_length: 132300
-      stereo: True
+    name: MusicSourceSeparationConcatEvaluator
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: others
+        targets: vocals

@@ -32,7 +32,6 @@ train:
             kwargs:
               chunk_length: 176400
               stereo: True
-          - name: StereoToBatch
           - name: ToTorchTensor
     eval:
       datasets:
@@ -58,7 +57,6 @@ train:
               chunk_length: 176400
               hop_length: 132300
               stereo: True
-          - name: StereoToBatch
           - name: ToTorchTensor
   model:
     name: TorchBSRoformer
@@ -74,13 +72,7 @@ train:
       window_sizes: [4096, 2048, 1024, 512, 256]
       window_fn: hann
   criteria:
-    name: TorchBsRoformerCriteria
-    kwargs:
-      num_stems: 1
-      resolution_weight: 1.0
-      stft_n_fft: 2048
-      window_sizes: [4096, 2048, 1024, 512, 256]
-      window_fn: hann
+    name: TorchSourceSeparationL1Criteria
   optimizer:
     name: TorchAdamWOptimizer
     kwargs:
@@ -110,6 +102,18 @@ evaluation:
     - name: MUSDB18HQ
       kwargs:
         targets: vocals
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: bass
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: drums
+        subsets: [test]
+    - name: MUSDB18HQ
+      kwargs:
+        targets: other
         subsets: [test]
   dataloader:
     name: TorchDataLoader

@@ -16,7 +16,7 @@ def collate_fun(batch: list[tuple[torch.Tensor, torch.Tensor]]) -> tuple[torch.T
 
 @register()
 class MusicSourceDecoder(Decoder):
-    def __init__(self, stereo_to_batch: bool = True):
+    def __init__(self, stereo_to_batch: bool = False):
         self.stereo_to_batch = stereo_to_batch
 
     def get_collate_function(self):

@@ -11,14 +11,14 @@ class RandomAudioChunk(DataTransform):
         self.chunk_length = chunk_length
         self.stereo = stereo
 
-    def transform(self, input: np.ndarray, target: np.ndarray):
-        if len(input) > self.chunk_length:
-            random_index = np.random.randint(0, len(input) - self.chunk_length)
-            output = input[random_index : random_index + self.chunk_length]
+    def transform(self, audio: np.ndarray, target: np.ndarray):
+        if len(audio) > self.chunk_length:
+            random_index = np.random.randint(0, len(audio) - self.chunk_length)
+            output = audio[random_index : random_index + self.chunk_length]
             target_output = target[:, random_index : random_index + self.chunk_length]
         else:
             output = np.zeros((self.chunk_length, 2 if self.stereo else 1))
             target_output = np.zeros((target.shape[0], self.chunk_length, 2 if self.stereo else 1))
-            output[: len(input)] = input
-            target_output[:, : len(input)] = target
+            output[: len(audio)] = audio
+            target_output[:, : len(audio)] = target
         return output, target_output
