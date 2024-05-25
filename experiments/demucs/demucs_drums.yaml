@@ -1,5 +1,5 @@
-experiment_name: demucs_vocals
-experiment_description: DemucsV2 Trained to separate mix into vocals
+experiment_name: demucs_drums
+experiment_description: DemucsV2 Trained to separate mix into drums
 experiment_topic: Music-Source-Separation
 experiment_tracker:
   name: MLFlowExperimentTracker
@@ -15,7 +15,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: vocals
+            targets: drums
             subsets: [train]
             split: train
             num_repetions: 25
@@ -41,7 +41,7 @@ train:
       datasets:
         - name: MUSDB18HQ
           kwargs:
-            targets: vocals
+            targets: drums
             subsets: [train]
             split: valid
       dataloader:
@@ -84,33 +84,21 @@ train:
       mixed_precision: False
       compile: False
       use_gpu: True
-      eval_batch_size: 8
+      eval_batch_size: 16
       accumulate_gradient: 8
   evaluator:
     name: MusicSourceSeparationConcatEvaluator
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: vocals
+        targets: drums
   saver:
     name: TorchModelSaver
 evaluation:
   datasets:
     - name: MUSDB18HQ
       kwargs:
-        targets: vocals
-        subsets: [test]
-    - name: MUSDB18HQ
-      kwargs:
-        targets: bass
-        subsets: [test]
-    - name: MUSDB18HQ
-      kwargs:
         targets: drums
-        subsets: [test]
-    - name: MUSDB18HQ
-      kwargs:
-        targets: other
         subsets: [test]
   dataloader:
     name: TorchDataLoader
