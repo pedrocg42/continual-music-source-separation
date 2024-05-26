@@ -35,7 +35,7 @@ class MusicSourceSeparationLooper(TorchLooper):
             if self.max_steps and (i + 1) >= self.max_steps:
                 break
         eval_loss = np.mean(batch_results["loss"])
-        self.experiment_tracker.log_metric("Eval.Loss", eval_loss)
+        self.experiment_tracker.log_metric("Eval.Loss", eval_loss, step=epoch)
         for metric in self.metrics:
             metric.log(epoch)
         return {"eval_loss": eval_loss}
