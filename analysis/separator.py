@@ -1,5 +1,3 @@
-import math
-
 import numpy as np
 import torch
 from tqdm import tqdm
@@ -12,7 +10,7 @@ class Separator:
         self,
         model_path: str,
         sources_names: list[str],
-        batch_length: int = 8,
+        batch_length: int = 1,
         chunk_length: int = 44100 * 10,
         hop_length: int = 44100 * 10,
     ) -> None:
@@ -37,22 +35,18 @@ class Separator:
 
     @torch.no_grad()
     def separate(self, audio: np.ndarray) -> np.ndarray:
-        breakpoint()
         chunks = audio_to_chunks(audio, chunk_length=self.chunk_length, hop_length=self.hop_length)
-        predicted_chunks = self.predict_batches(torch.as_tensor(chunks))
+        breakpoint()
+        predicted_chunks = self.predict_batches(chunks)
         sources = np.asarray(concatenate_chunks(predicted_chunks))
         return sources
 
     @torch.no_grad()
     def predict_batches(self, chunks: torch.Tensor) -> tuple[torch.Tensor, float]:
         predictions = []
-        iterator = tqdm(
-            chunks.split(self.batch_length),
-            total=math.ceil(len(chunks) / self.batch_length),
-            desc="Inference by batches",
-            colour="blue",
-        )
+        iterator = tqdm(np.array_split(chunks, self.batch_length), desc="Inference by batches", colour="blue")
         for batch_input in iterator:
+            batch_input = torch.as_tensor(batch_input)
             batch_predictions = self.model(batch_input)
-            predictions.append(batch_predictions.cpu())
+            predictions.append(batch_predictions)
         return torch.vstack(predictions)

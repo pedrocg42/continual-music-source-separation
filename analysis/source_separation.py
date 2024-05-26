@@ -23,7 +23,7 @@ available_models = {
 }
 
 
-@st.cache_resource()
+@st.cache_resource(show_spinner=True)
 def load_separator(model_name: str) -> Separator:
     model_dict = available_models[model_name]
     separator = Separator(
@@ -99,7 +99,7 @@ def source_separation():
         st.session_state["started"] = True
         st.session_state["audio"] = None
         st.session_state["sample_rate"] = None
-        st.session_state["separators"]: dict[str, Separator] = {}
+        st.session_state["separators"] = {}
 
     st.title("Music Source Separation")
 
