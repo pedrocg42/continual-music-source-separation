@@ -1,3 +1,5 @@
+import random
+
 import torch
 from madre import register
 from madre.base.data.data_transforms.data_transform import DataTransform
@@ -9,26 +11,25 @@ class FlipChannels(DataTransform):
     Flip left-right channels.
     """
 
-    def forward(self, audio: torch.Tensor, target: torch.Tensor):
-        batch, sources, channels, time = audio.size()
-        target_batch, target_sources, target_channels, target_time = target.size()
-        left = torch.randint(2, (batch, sources * target_sources, 1, 1), device=audio.device)
-        left = left.expand(-1, -1, -1, time)
-        right = 1 - left
-        audio = torch.cat([audio.gather(2, left), audio.gather(2, right)], dim=2)
+    def __init__(self, proba: float = 0.5):
+        self.proba = proba
+
+    def transform(self, audio: torch.Tensor, target: torch.Tensor):
+        if random.uniform(0, 1) < self.proba:
+            audio = torch.flip(audio, dims=[0])
+            target = torch.flip(target, dims=[1])
         return audio, target
 
 
 @register()
 class FlipSignTransform(DataTransform):
+    def __init__(self, proba: float = 0.5):
+        self.proba = proba
+
     def transform(self, audio: torch.Tensor, target: torch.Tensor):
-        batch, sources, channels, time = audio.size()
-        target_batch, target_sources, target_channels, target_time = target.size()
-        signs = torch.randint(
-            2, (batch, sources + target_sources, 1, 1), device=audio.device, dtype=torch.float32
-        )
-        audio = audio * (2 * signs[:, 0] - 1)
-        target = target * (2 * signs[:, 1:] - 1)
+        if random.uniform(0, 1) < self.proba:
+            audio = audio * -1
+            target = target * -1
         return audio, target
 
 
@@ -39,13 +40,12 @@ class ScaleTransform(DataTransform):
         self.proba = proba
         self.min = min
         self.max = max
+        self.delta = self.max - self.min
 
     def transform(self, audio: torch.Tensor, target: torch.Tensor):
-        batch, sources, channels, time = audio.size()
-        target_batch, target_sources, target_channels, target_time = target.size()
-        scales = torch.empty(batch, sources + target_sources, 1, 1, device=audio.device).uniform_(
-            self.min, self.max
-        )
-        audio *= scales[:, 0]
-        target *= scales[:, 1:]
+        if random.uniform(0, 1) < self.proba:
+            scale = torch.rand(1, device=audio.device, dtype=torch.float32)
+            scale = scale * self.delta + self.min
+            audio *= scale
+            target *= scale
         return audio, target

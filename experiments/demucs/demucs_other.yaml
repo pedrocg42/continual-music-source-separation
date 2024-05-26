@@ -9,7 +9,7 @@ plugins:
 output_folder: output
 
 train:
-  epochs: 10
+  epochs: 20
   data:
     train:
       datasets:
@@ -37,6 +37,9 @@ train:
             kwargs:
               input_pattern: "length channels -> channels length"
               target_pattern: "sources length channels -> sources channels length"
+          - name: FlipChannels
+          - name: FlipSignTransform
+          - name: ScaleTransform
     eval:
       datasets:
         - name: MUSDB18HQ
@@ -70,22 +73,22 @@ train:
     name: DemucsV2
     kwargs:
       sources: vocal
-      depth: 5
+      depth: 6
       channels: 64
   criteria:
     name: TorchSourceSeparationL1Criteria
   optimizer:
     name: TorchAdamWOptimizer
     kwargs:
-      lr: 0.003
+      lr: 0.0003
   looper:
     name: MusicSourceSeparationLooper
     kwargs:
       mixed_precision: False
       compile: False
       use_gpu: True
-      eval_batch_size: 16
-      accumulate_gradient: 8
+      eval_batch_size: 8
+      accumulate_gradient: 16
   evaluator:
     name: MusicSourceSeparationConcatEvaluator
   metrics:
@@ -132,4 +135,4 @@ evaluation:
   metrics:
     - name: MusicSourceSeparationMetric
       kwargs:
-        targets: vocals
+        targets: other
