@@ -31,7 +31,7 @@ def read_audio(
 
 
 def write_audio(filename: str | io.BytesIO, audio: np.ndarray, sample_rate: int = 44100) -> None:
-    wavfile.write(filename, rate=sample_rate, data=audio)
+    wavfile.write(filename, rate=sample_rate, data=audio.T)
 
 
 def audio_to_chunks(audio: np.ndarray, chunk_length: int, hop_length: int) -> np.ndarray:

@@ -7,19 +7,19 @@ from analysis.utils.audio import plot_audio, read_audio, write_audio
 
 available_models = {
     "Demucs Vocals": {
-        "path": "./../output/demucs_vocals/model.pth.tar",
+        "path": "./../output/demucs-adam_vocals/model.pth.tar",
         "sources": ["Vocals 👄"],
     },
     "Demucs Drums": {
-        "path": "./../output/demucs_drums/model.pth.tar",
+        "path": "./../output/demucs-adam_drums/model.pth.tar",
         "sources": ["Drums 🥁"],
     },
     "Demucs Bass": {
-        "path": "./../output/demucs_bass/model.pth.tar",
+        "path": "./../output/demucs-adam_bass/model.pth.tar",
         "sources": ["Bass 🎸"],
     },
     "Demucs Other": {
-        "path": "./../output/demucs_other/model.pth.tar",
+        "path": "./../output/demucs-adam_other/model.pth.tar",
         "sources": ["Other 🎻"],
     },
 }
@@ -93,7 +93,7 @@ def result_section():
             st.text(source_name)
             plot_audio(source)
             st.audio(source, sample_rate=st.session_state["sample_rate"])
-            audio_file = f"{os.path.splitext(st.session_state["uploaded_file"].name)[0]} - {source_name}.wav"
+            audio_file = f"{os.path.splitext(st.session_state['uploaded_file'].name)[0]} - {source_name}.wav"
             write_audio(audio_file, audio=source, sample_rate=st.session_state["sample_rate"])
             st.success(f"Audio saved in {audio_file}")
 
