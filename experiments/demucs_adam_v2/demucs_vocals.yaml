@@ -1,7 +1,5 @@
 experiment_name: demucs-adam-v2_vocals
-experiment_description: DemucsV2 Trained to separate mix into vocals. Adam optimizer. More augmentations
-
-
+experiment_description: DemucsV2 Trained to separate mix into vocals. Adam optimizer. More augmentations. Cosine Scheduler.
 
 experiment_topic: Music-Source-Separation
 experiment_tracker:
@@ -26,7 +24,7 @@ train:
         name: TorchDataLoader
         kwargs:
           drop_last: True
-        num_workers: 0
+        num_workers: 4
         batch_size: 4
         decoder:
           name: MusicSourceDecoder
@@ -88,6 +86,10 @@ train:
     name: TorchAdamOptimizer
     kwargs:
       lr: 0.0003
+  scheduler:
+    name: TorchCosineLRScheduler
+    kwargs:
+      min_lr: 0.00003
   looper:
     name: MusicSourceSeparationLooper
     kwargs:
