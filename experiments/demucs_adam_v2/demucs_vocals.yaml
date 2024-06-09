@@ -35,7 +35,7 @@ train:
               target_pattern: "sources length channels -> sources channels length"
           - name: RandomAudioChunk
             kwargs:
-              chunk_length: 882000
+              chunk_length: 573300
           - name: ToTorchTensor
           - name: TimeStretchTransform
           - name: RandomAudioChunk

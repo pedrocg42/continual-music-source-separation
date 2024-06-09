@@ -21,6 +21,7 @@ class TimeStretchTransform(DataTransform):
         self.stretch = TimeStretch()
         self.ispec = InverseSpectrogram()
 
+    @torch.no_grad()
     def transform(self, audio: torch.Tensor, target: torch.Tensor):
         if random.uniform(0, 1) < self.p:
             stretch = round(random.uniform(self.min_stretch, self.max_stretch), ndigits=2)

@@ -20,6 +20,6 @@ class RandomAudioChunk(DataTransform):
         else:
             output = np.zeros((2 if self.stereo else 1, self.chunk_length))
             target_output = np.zeros((target.shape[0], 2 if self.stereo else 1, self.chunk_length))
-            output[..., len_audio] = audio
+            output[..., :len_audio] = audio
             target_output[..., :len_audio] = target
         return output, target_output
