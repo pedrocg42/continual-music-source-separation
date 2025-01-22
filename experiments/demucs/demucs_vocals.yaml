@@ -1,0 +1,138 @@
+experiment_name: demucs_vocals
+experiment_description: DemucsV2 Trained to separate mix into vocals
+experiment_topic: Music-Source-Separation
+experiment_tracker:
+  name: MLFlowExperimentTracker
+log_level: INFO
+plugins:
+  - hijos
+output_folder: output
+
+train:
+  epochs: 20
+  data:
+    train:
+      datasets:
+        - name: MUSDB18HQ
+          kwargs:
+            targets: vocals
+            subsets: [train]
+            split: train
+            num_repetions: 25
+      dataloader:
+        name: TorchDataLoader
+        kwargs:
+          drop_last: True
+        num_workers: 4
+        batch_size: 4
+        decoder:
+          name: MusicSourceDecoder
+        data_transforms:
+          - name: RandomAudioChunk
+            kwargs:
+              chunk_length: 441000
+              stereo: True
+          - name: ToTorchTensor
+          - name: Rearrange
+            kwargs:
+              input_pattern: "length channels -> channels length"
+              target_pattern: "sources length channels -> sources channels length"
+          - name: FlipChannels
+          - name: FlipSignTransform
+          - name: ScaleTransform
+    eval:
+      datasets:
+        - name: MUSDB18HQ
+          kwargs:
+            targets: vocals
+            subsets: [train]
+            split: valid
+      dataloader:
+        name: TorchDataLoader
+        kwargs:
+          drop_last: False
+          shuffle_each_epoch: False
+        num_workers: 4
+        batch_size: 1
+        decoder:
+          name: MusicSourceDecoder
+          kwargs:
+            stereo_to_batch: False
+        data_transforms:
+          - name: AudioToChunks
+            kwargs:
+              chunk_length: 441000
+              hop_length: 441000
+              stereo: True
+          - name: ToTorchTensor
+          - name: Rearrange
+            kwargs:
+              input_pattern: "batch length channels -> batch channels length"
+              target_pattern: "batch sources length channels -> batch sources channels length"
+  model:
+    name: DemucsV2
+    kwargs:
+      sources: vocal
+      depth: 6
+      channels: 64
+  criteria:
+    name: TorchSourceSeparationL1Criteria
+  optimizer:
+    name: TorchAdamWOptimizer
+    kwargs:
+      lr: 0.0003
+  looper:
+    name: MusicSourceSeparationLooper
+    kwargs:
+      mixed_precision: False
+      compile: False
+      use_gpu: True
+      eval_batch_size: 8
+      accumulate_gradient: 16
+  evaluator:
+    name: MusicSourceSeparationConcatEvaluator
+  metrics:
+    - name: MusicSourceSeparationMetric
+      kwargs:
+        targets: vocals
+  saver:
+    name: TorchModelSaver
+evaluation:
+  datasets:
+    - name: MUSDB18HQ
+      kwargs:
+        targets: vocals
+        subsets: [test]
+  dataloader:
+    name: TorchDataLoader
+    kwargs:
+      drop_last: False
+      shuffle_each_epoch: False
+    num_workers: 4
+    batch_size: 1
+    decoder:
+      name: MusicSourceDecoder
+      kwargs:
+        stereo_to_batch: False
+    data_transforms:
+      - name: AudioToChunks
+        kwargs:
+          chunk_length: 441000
+          hop_length: 441000
+          stereo: True
+      - name: ToTorchTensor
+      - name: Rearrange
+        kwargs:
+          input_pattern: "batch length channels -> batch channels length"
+          target_pattern: "batch sources length channels -> batch sources channels length"
+  processor:
+    name: MusicSourceSeparationProcessor
+    kwargs:
+      use_gpu: True
+      eval_batch_size: 16
+  evaluator:
+    name: MusicSourceSeparationConcatEvaluator
+  metrics:
+    - name: MusicSourceSeparationMetric
+      kwargs:
+        targets: vocals
